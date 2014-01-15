@@ -135,6 +135,7 @@ def make_mendel_data(inputPed, inputMap, temp, trioOut=None, locusOut=None):
 
 
 def make_tstv_data(vcfFile, temp, tstvOut=None):
+  fnull = open(os.devnull, 'w')
   ## identify the total number of variants in the VCF file
   nsnp = len( [ rec for rec in vcf.Reader(open(vcfFile, 'r')) ] )
 
@@ -142,7 +143,7 @@ def make_tstv_data(vcfFile, temp, tstvOut=None):
   tstvCall = ['vcftools', '--vcf', vcfFile, '--TsTv', str(nsnp), '--out',
       temp]
   tstvCall = smart_vcftools(tstvCall)
-  sp.call(tstvCall) 
+  sp.call(tstvCall, stdout = fnull) 
  
   ## clean up files
   sp.call(['rm', temp+'.log'])
