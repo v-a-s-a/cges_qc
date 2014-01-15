@@ -181,7 +181,7 @@ def make_maf_data(plinkMap, plinkPed, temp, mafOut=None):
     sp.call(['mv', temp+'.frq', mafOut])
 
 
-def make_miss_data(plinkMap, plinkPed, temp, missOuti=None): 
+def make_miss_data(plinkMap, plinkPed, temp, missOut=None): 
   fnull = open(os.devnull, 'w')
   ## get the missingness rates
   missCall = ['plink',
@@ -194,26 +194,29 @@ def make_miss_data(plinkMap, plinkPed, temp, missOuti=None):
   ## clean up files
   sp.call(['rm', temp+'.log'])
   sp.call(['rm', temp+'.nosex'])
-  sp.call(['rm', temp+'.imiss'])
-  sp.call(['mv', temp+'.lmiss', missOut])
+  if missOut:
+    sp.call(['mv', temp+'.lmiss', missOut])
 
 
-def make_hardy_data(plinkMap, plinkPed, temp, hardyOut):
+def make_hardy_data(plinkMap, plinkPed, temp, hardyOut=None):
+  fnull = open(os.devnull, 'w')
   ## get hardy weinberg estimates
   hweCall = ['plink',
     '--ped', plinkPed,
     '--map', plinkMap,
     '--hardy',
     '--out', temp]
-  sp.call(hweCall)
+  sp.call(hweCall, stdout = fnull)
 
   ## clean up files
   sp.call(['rm', temp+'.log'])
   sp.call(['rm', temp+'.nosex'])
-  sp.call(['mv', temp+'.hwe', hardyOut])
+  if hardyOut:
+    sp.call(['mv', temp+'.hwe', hardyOut])
     
 
 def make_rediscovery_data(vcfFile, evsOut, kgOut):
+  fnull = open(os.devnull, 'w')
   ## calculate EVS rediscovery rate
   evsVar = cPickle.load(open('/nas40t0/vasya/exome_variant_server/ESP6500SI-V2-SSA137.snps.set.pickle', 'rb'))
   evsRes = calc_rediscovery(evsVar, vcfFile)
@@ -260,14 +263,14 @@ def main():
       help = 'Output file location for missingess plots PDF.')
   parser.add_option('--rediscover-out', dest = 'rediscoverOut', action = 'store',
       help = 'Output file location for rediscovery rate plots PDF.')
-  parser.add_option('--hardy-out', dest = 'hardyOut', action = 'store',
-      help = 'Output file location for Hardy Weinberg analysis plots PDF.')
   parser.add_option('--mendel-out', dest = 'mendelOut', action = 'store', 
       help = 'Output file location for Mendel inconsistency plots PDF.')
   parser.add_option('--temp-dir', dest = 'tempDir', action = 'store',
       help = 'Directory for writing intermediate analysis files.')
   (options, args) = parser.parse_args()
   opt_dict = vars(options)
+  
+  fnull = open(os.devnull, 'w')
 
   ## give each branch a name
   branches = ['atlas', 'gatk', 'freebayes', 'cges']
@@ -287,29 +290,30 @@ def main():
     for branchData in resources.values():
       make_mendel_data(inputPed=branchData['ped'], inputMap=branchData['map'], temp=branchData['temp'])
     ## make plots PDF by executing an R script with passed in arguments
-    sp.call(['Rscript', 'R/mendel.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.mendelOut])
+    sp.call(['Rscript', 'R/mendel.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.mendelOut], stdout = fnull)
 
   if options.tstvOut:
     ## generate data
     for branchData in resources.values():
       make_tstv_data(vcfFile=branchData['vcf'], temp=branchData['temp'])
     ## generate plot PDF
-    sp.call(['Rscript', 'R/tstv.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.tstvOut])
+    sp.call(['Rscript', 'R/tstv.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.tstvOut], stdout = fnull)
 
   if options.hetOut:
     for branchData in resources.values():
       make_het_data(vcfFile=branchData['vcf'], temp=branchData['temp'])
-    sp.call(['Rscript', 'R/het.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.hetOut])
+    sp.call(['Rscript', 'R/het.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.hetOut], stdout = fnull)
 
-#  if options.mafOut:
-#    for branchData in resources.values():
-#      make_maf_data(plinkMap=branchData['map'], plinkPed=branchData['ped'], temp= branchData['temp'], mafOut=options.mafOut)
-#    sp.call(['Rscript', 'R/maf.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.hetOut])
-      
-#  if options.missOut:
-#    make_miss_data(plinkMap = , plinkPed = , temp = intermedBase, missOut = )
-#  if options.hardyOut:
-#    make_hardy_data(plinkMap = , plinkPed = , temp = intermedBase, hardyOut = )
+  if options.mafOut:
+    for branchData in resources.values():
+      make_maf_data(plinkMap=branchData['map'], plinkPed=branchData['ped'], temp=branchData['temp'])
+    sp.call(['Rscript', 'R/maf.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.mafOut])
+     
+  if options.missOut:
+    for branchData in resources.values(): 
+      make_miss_data(plinkMap=branchData['map'], plinkPed=branchData['ped'], temp=branchData['temp'])
+    sp.call(['Rscript', 'R/missing.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.missOut])
+
 #  if options.rediscoverOut:
 #    make_rediscovery_data()
     
