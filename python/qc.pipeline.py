@@ -151,40 +151,45 @@ def make_tstv_data(vcfFile, temp, tstvOut=None):
   if tstvOut:
     sp.call(['mv', temp+'.TsTv.summary', tstvOut])
 
-def make_het_data(vcfFile, temp, hetOut):
+def make_het_data(vcfFile, temp, hetOut=None):
+  fnull = open(os.devnull, 'w')
   ## Calculate sample heterozygosity
   hetCall = ['vcftools', '--vcf', vcfFile, '--het', '--out', temp ]
   hetCall = smart_vcftools(hetCall)
-  sp.call(hetCall)
+  sp.call(hetCall, stdout = fnull)
 
   ## clean up files
   sp.call(['rm', temp+'.log'])
-  sp.call(['mv', temp+'.het', hetOut])
+  if hetOut:
+    sp.call(['mv', temp+'.het', hetOut])
 
-def make_maf_data(plinkMap, plinkPed, temp, mafOut):
+def make_maf_data(plinkMap, plinkPed, temp, mafOut=None):
+  fnull = open(os.devnull, 'w')
   ## generate minor allele frequency distribution
   mafCall = ['plink',
-  '--ped', plinkPed,
-  '--map', plinkMap,
-  '--freq',
-  '--allow-no-sex',
-  '--out', temp]
-  sp.call(mafCall)
+    '--ped', plinkPed,
+    '--map', plinkMap,
+    '--freq',
+    '--allow-no-sex',
+    '--out', temp]
+  sp.call(mafCall, stdout=fnull)
 
   ## clean up files
   sp.call(['rm', temp+'.log'])
   sp.call(['rm', temp+'.nosex'])
-  sp.call(['mv', temp+'.frq', mafOut])
+  if mafOut:
+    sp.call(['mv', temp+'.frq', mafOut])
 
 
-def make_miss_data(plinkMap, plinkPed, temp, missOut): 
+def make_miss_data(plinkMap, plinkPed, temp, missOuti=None): 
+  fnull = open(os.devnull, 'w')
   ## get the missingness rates
   missCall = ['plink',
     '--ped', plinkPed,
     '--map', plinkMap,
     '--missing',
     '--out', temp]
-  sp.call(missCall) 
+  sp.call(missCall, stdout = fnull) 
  
   ## clean up files
   sp.call(['rm', temp+'.log'])
@@ -222,81 +227,91 @@ def make_rediscovery_data(vcfFile, evsOut, kgOut):
   print >> open(kgOut, 'w'), '\t'.join(kgRes)
 
 
+def compile_resource_descr(name, vcf, tmpdir):
+  '''
+  Make a dictionary of the file descriptions associated with a VCF file.
+  '''
+  resources = { "vcf": vcf,
+                "ped": tmpdir + name + '.ped' ,
+                "map": tmpdir + name + '.map',
+                "temp": tmpdir + name }
+  return resources
 
 def main():
+  ## parse command line arguments
+  parser = opt.OptionParser()
+  parser.add_option('--cges-vcf', dest = 'cges', action = 'store', 
+      help = 'File path for CGES VCF for which to generate QC metrics.')
+  parser.add_option('--atlas-vcf', dest = 'atlas', action = 'store', 
+      help = 'File path for ATLAS VCF for which to generate QC metrics.')
+  parser.add_option('--gatk-vcf', dest = 'gatk', action = 'store', 
+      help = 'File path for GATK VCF for which to generate QC metrics.')
+  parser.add_option('--freebayes-vcf', dest = 'freebayes', action = 'store', 
+      help = 'File path for Freebayes VCF for which to generate QC metrics.')
+  parser.add_option('--ped-file', dest = 'pedFile', action = 'store', 
+      help = 'Pedigree file for samples (Optional).')
+  parser.add_option('--tstv-out', dest = 'tstvOut', action = 'store', 
+      help = 'Output file location for TsTv plots PDF.')
+  parser.add_option('--het-out', dest = 'hetOut', action = 'store', 
+      help = 'Output file location for heterozygosity plots PDF.')
+  parser.add_option('--maf-out', dest = 'mafOut', action = 'store', 
+      help = 'Output file location for minor allele frequency plots PDF.')
+  parser.add_option('--miss-out', dest = 'missOut', action = 'store', 
+      help = 'Output file location for missingess plots PDF.')
+  parser.add_option('--rediscover-out', dest = 'rediscoverOut', action = 'store',
+      help = 'Output file location for rediscovery rate plots PDF.')
+  parser.add_option('--hardy-out', dest = 'hardyOut', action = 'store',
+      help = 'Output file location for Hardy Weinberg analysis plots PDF.')
+  parser.add_option('--mendel-out', dest = 'mendelOut', action = 'store', 
+      help = 'Output file location for Mendel inconsistency plots PDF.')
+  parser.add_option('--temp-dir', dest = 'tempDir', action = 'store',
+      help = 'Directory for writing intermediate analysis files.')
+  (options, args) = parser.parse_args()
+  opt_dict = vars(options)
 
-    ## parse command line arguments
-    parser = opt.OptionParser()
-    parser.add_option('--cges-vcf', dest = 'cgesVcf', action = 'store', 
-        help = 'File path for CGES VCF for which to generate QC metrics.')
-    parser.add_option('--atlas-vcf', dest = 'atlasVcf', action = 'store', 
-        help = 'File path for ATLAS VCF for which to generate QC metrics.')
-    parser.add_option('--gatk-vcf', dest = 'gatkVcf', action = 'store', 
-        help = 'File path for GATK VCF for which to generate QC metrics.')
-    parser.add_option('--freebayes-vcf', dest = 'freebayesVcf', action = 'store', 
-        help = 'File path for Freebayes VCF for which to generate QC metrics.')
-    parser.add_option('--ped-file', dest = 'pedFile', action = 'store', 
-        help = 'Pedigree file for samples (Optional).')
-    parser.add_option('--tstv-out', dest = 'tstvOut', action = 'store', 
-        help = 'Output file location for TsTv plots PDF.')
-    parser.add_option('--het-out', dest = 'hetOut', action = 'store', 
-        help = 'Output file location for heterozygosity plots PDF.')
-    parser.add_option('--maf-out', dest = 'mafOut', action = 'store', 
-        help = 'Output file location for minor allele frequency plots PDF.')
-    parser.add_option('--miss-out', dest = 'missOut', action = 'store', 
-        help = 'Output file location for missingess plots PDF.')
-    parser.add_option('--rediscover-out', dest = 'rediscoverOut', action = 'store',
-        help = 'Output file location for rediscovery rate plots PDF.')
-    parser.add_option('--hardy-out', dest = 'hardyOut', action = 'store',
-        help = 'Output file location for Hardy Weinberg analysis plots PDF.')
-    parser.add_option('--mendel-out', dest = 'mendelOut', action = 'store', 
-        help = 'Output file location for Mendel inconsistency plots PDF.')
-    parser.add_option('--temp-dir', dest = 'tempDir', action = 'store',
-        help = 'Directory for writing intermediate analysis files.')
-    (options, args) = parser.parse_args()
+  ## give each branch a name
+  branches = ['atlas', 'gatk', 'freebayes', 'cges']
 
-    ## create names for temporary files
-    tmpatlas = options.tempDir + 'atlas'
-    tmpgatk = options.tempDir + 'gatk'
-    tmpfreebayes = options.tempDir + 'freebayes'
-    tmpcges = options.tempDir + 'cges'
+  ## store resource locations for each branch
+  resources = dict()
+  for branch in branches:
+    resources[branch] = compile_resource_descr(name = branch, vcf = opt_dict[branch], tmpdir = options.tempDir)
 
+  ## check if we need to recode into PLINK files
+  if options.mendelOut or options.mafOut or options.missOut or options.hardyOut:
+    for branchData in resources.values():
+      make_plink_data(vcfFile=branchData['vcf'], pedFile=options.pedFile, temp=branchData['temp'])
 
-    ## check if we need to recode into PLINK files
-    if options.mendelOut or options.mafOut or options.missOut or options.hardyOut:
-      make_plink_data(vcfFile=options.atlasVcf, pedFile=options.pedFile, temp=tmpatlas)
-      make_plink_data(vcfFile=options.gatkVcf, pedFile=options.pedFile, temp=tmpgatk)
-      make_plink_data(vcfFile=options.freebayesVcf, pedFile=options.pedFile, temp=tmpfreebayes)
-      make_plink_data(vcfFile=options.cgesVcf, pedFile=options.pedFile, temp=tmpcges)
+  if options.mendelOut:
+    ## generate data
+    for branchData in resources.values():
+      make_mendel_data(inputPed=branchData['ped'], inputMap=branchData['map'], temp=branchData['temp'])
+    ## make plots PDF by executing an R script with passed in arguments
+    sp.call(['Rscript', 'R/mendel.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.mendelOut])
 
-    if options.mendelOut:
-      ## generate data 
-      make_mendel_data(inputPed=tmpatlas+'.ped', inputMap=tmpatlas+'.map', temp=tmpatlas)
-      make_mendel_data(inputPed=tmpgatk+'.ped', inputMap=tmpgatk+'.map', temp=tmpgatk)
-      make_mendel_data(inputPed=tmpfreebayes+'.ped', inputMap=tmpfreebayes+'.map', temp=tmpfreebayes)
-      make_mendel_data(inputPed=tmpcges+'.ped', inputMap=tmpcges+'.map', temp=tmpcges)
-      ## make plots PDF by executing an R script with passed in arguments
-      sp.call(['Rscript', 'R/mendel.R', tmpatlas, tmpgatk, tmpfreebayes, tmpcges, options.mendelOut])
+  if options.tstvOut:
+    ## generate data
+    for branchData in resources.values():
+      make_tstv_data(vcfFile=branchData['vcf'], temp=branchData['temp'])
+    ## generate plot PDF
+    sp.call(['Rscript', 'R/tstv.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.tstvOut])
 
-    if options.tstvOut:
-      ## generate data
-      make_tstv_data(vcfFile=options.atlasVcf, temp=tmpatlas)
-      make_tstv_data(vcfFile=options.gatkVcf, temp=tmpgatk)
-      make_tstv_data(vcfFile=options.freebayesVcf, temp=tmpfreebayes)
-      make_tstv_data(vcfFile=options.cgesVcf, temp=tmpcges)
-      ## generate plot PDF
-      sp.call()
+  if options.hetOut:
+    for branchData in resources.values():
+      make_het_data(vcfFile=branchData['vcf'], temp=branchData['temp'])
+    sp.call(['Rscript', 'R/het.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.hetOut])
 
-#    if options.hetOut:
-#      make_het_data(vcfFile = vcfFile, temp = intermedBase, hetOut = )
-#    if options.mafOut:
-#      make_maf_data(plinkMap = , plinkPed = , temp = intermedBase, mafOut = )
-#    if options.missOut:
-#      make_miss_data(plinkMap = , plinkPed = , temp = intermedBase, missOut = )
-#    if options.hardyOut:
-#      make_hardy_data(plinkMap = , plinkPed = , temp = intermedBase, hardyOut = )
-#    if options.rediscoverOut:
-#      make_rediscovery_data()
+#  if options.mafOut:
+#    for branchData in resources.values():
+#      make_maf_data(plinkMap=branchData['map'], plinkPed=branchData['ped'], temp= branchData['temp'], mafOut=options.mafOut)
+#    sp.call(['Rscript', 'R/maf.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.hetOut])
+      
+#  if options.missOut:
+#    make_miss_data(plinkMap = , plinkPed = , temp = intermedBase, missOut = )
+#  if options.hardyOut:
+#    make_hardy_data(plinkMap = , plinkPed = , temp = intermedBase, hardyOut = )
+#  if options.rediscoverOut:
+#    make_rediscovery_data()
     
 
 

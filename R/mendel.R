@@ -5,7 +5,7 @@ calc_mendel <- function(x) {
   return( with(x, length(which(N>0))/length(N)) )
 }
 
-%&% <- function(a,b) paste(a, b, sep="")
+"%&%" <- function(a,b) paste(a, b, sep="")
 
 
 args <- commandArgs(trailing=TRUE)
