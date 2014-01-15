@@ -1,29 +1,32 @@
 library(ggplot2)
-library(RColorBrewer)
 library(gridExtra)
 
 calc_mendel <- function(x) {
   return( with(x, length(which(N>0))/length(N)) )
 }
 
+%&% <- function(a,b) paste(a, b, sep="")
+
+
 args <- commandArgs(trailing=TRUE)
 
-atlas.file <- args[1]
-gatk.file <- args[2]
-freebayes.file <- args[3]
-cges.file <- args[4]
+atlas.base <- args[1]
+gatk.base <- args[2]
+freebayes.base <- args[3]
+cges.base <- args[4]
+pdf.file <- args[5]
 
 ## look at mendelian inconsistencies per trio
-atlas.fmen <- read.table(atlas.file, header=T)
-gatk.fmen <- read.table(gatk.file, header=T)
-freebayes.fmen <- read.table(freebayes.file, header=T)
-consensus.fmen <- read.table(cges.file, header=T)
+atlas.fmen <- read.table(atlas.base %&% ".fmendel", header=T)
+gatk.fmen <- read.table(gatk.base %&% ".fmendel", header=T)
+freebayes.fmen <- read.table(freebayes.base %&% ".fmendel", header=T)
+consensus.fmen <- read.table(cges.base %&% ".fmendel", header=T)
 
 ## look at mendelian inconsistencies per locus
-atlas.lmen <- read.table(gsub('.fmendel', '.lmendel', atlas.file), header=T)
-gatk.lmen <- read.table(gsub('.fmendel','.lmendel', gatk.file), header=T)
-freebayes.lmen <- read.table(gsub('.fmendel', '.lmendel', freebayes.file), header=T)
-consensus.lmen <- read.table(gsub('.fmendel', '.lmendel', cges.file), header=T)
+atlas.lmen <- read.table(atlas.base %&% ".lmendel", header=T)
+gatk.lmen <- read.table(gatk.base %&% ".lmendel", header=T)
+freebayes.lmen <- read.table(freebayes.base %&% ".lmendel", header=T)
+consensus.lmen <- read.table(cges.base %&% ".lmendel", header=T)
 
 ## count the total number of variants in the set 
 freebayes.mvar <- length(freebayes.lmen$N)
@@ -77,7 +80,7 @@ trio_plt <- ggplot( mendel, aes(x=locus_order_callers, y=trio_error_rate, fill=C
           xlab("Caller") +
           ylab("% of Proband Genotypes with Mendelian errors") 
 
-x11()
+pdf(pdf.file)
 show(locus_plt)
-x11()
 show(trio_plt)
+dev.off()

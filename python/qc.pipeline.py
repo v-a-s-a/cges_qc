@@ -134,7 +134,7 @@ def make_mendel_data(inputPed, inputMap, temp, trioOut=None, locusOut=None):
     sp.call(['mv', temp+'.lmendel', locusOut])
 
 
-def make_tstv_data(vcfFile, temp, tstvOut):
+def make_tstv_data(vcfFile, temp, tstvOut=None):
   ## identify the total number of variants in the VCF file
   nsnp = len( [ rec for rec in vcf.Reader(open(vcfFile, 'r')) ] )
 
@@ -147,7 +147,8 @@ def make_tstv_data(vcfFile, temp, tstvOut):
   ## clean up files
   sp.call(['rm', temp+'.log'])
   sp.call(['rm', temp+'.TsTv'])
-  sp.call(['mv', temp+'.TsTv.summary', tstvOut])
+  if tstvOut:
+    sp.call(['mv', temp+'.TsTv.summary', tstvOut])
 
 def make_het_data(vcfFile, temp, hetOut):
   ## Calculate sample heterozygosity
@@ -253,6 +254,7 @@ def main():
         help = 'Directory for writing intermediate analysis files.')
     (options, args) = parser.parse_args()
 
+    ## create names for temporary files
     tmpatlas = options.tempDir + 'atlas'
     tmpgatk = options.tempDir + 'gatk'
     tmpfreebayes = options.tempDir + 'freebayes'
@@ -267,17 +269,23 @@ def main():
       make_plink_data(vcfFile=options.cgesVcf, pedFile=options.pedFile, temp=tmpcges)
 
     if options.mendelOut:
-      ## generate data
+      ## generate data 
       make_mendel_data(inputPed=tmpatlas+'.ped', inputMap=tmpatlas+'.map', temp=tmpatlas)
       make_mendel_data(inputPed=tmpgatk+'.ped', inputMap=tmpgatk+'.map', temp=tmpgatk)
       make_mendel_data(inputPed=tmpfreebayes+'.ped', inputMap=tmpfreebayes+'.map', temp=tmpfreebayes)
       make_mendel_data(inputPed=tmpcges+'.ped', inputMap=tmpcges+'.map', temp=tmpcges)
-      ## make plots PDF
-      sp.call(['Rscript', 'R/mendel.R', tmpatlas+'.fmendel', tmpgatk+'.fmendel', tmpfreebayes+'.fmendel', tmpcges+'.lmendel'])
+      ## make plots PDF by executing an R script with passed in arguments
+      sp.call(['Rscript', 'R/mendel.R', tmpatlas, tmpgatk, tmpfreebayes, tmpcges, options.mendelOut])
 
-      
-#    if options.tstvOut:
-#      make_tstv_data(vcfFile = vcfFile, temp = intermedBase, tstvOut = )
+    if options.tstvOut:
+      ## generate data
+      make_tstv_data(vcfFile=options.atlasVcf, temp=tmpatlas)
+      make_tstv_data(vcfFile=options.gatkVcf, temp=tmpgatk)
+      make_tstv_data(vcfFile=options.freebayesVcf, temp=tmpfreebayes)
+      make_tstv_data(vcfFile=options.cgesVcf, temp=tmpcges)
+      ## generate plot PDF
+      sp.call()
+
 #    if options.hetOut:
 #      make_het_data(vcfFile = vcfFile, temp = intermedBase, hetOut = )
 #    if options.mafOut:
