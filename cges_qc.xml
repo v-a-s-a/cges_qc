@@ -67,20 +67,20 @@
 
   <outputs>
     <data name="tstvOut" format="pdf" label="TsTv plot" >
-      <filter>tstvOut == "True"<\filter>
-    <\data>
+      <filter>tstvOut == "True"</filter>
+    </data>
     <data name="hetOut" format="pdf" label="F-statistic plot">
-      <filter>hetOut == "True"<\filter>
-    <\data>
+      <filter>hetOut == "True"</filter>
+    </data>
     <data name="mafOut" format="pdf" label="MAF plot" >
-      <filter>mafOut == "True"<\filter>
-    <\data>
+      <filter>mafOut == "True"</filter>
+    </data>
     <data name="missOut" format="pdf" label="Missingness plot" >
-      <filter>missOut == "True"<\filter>
-    <\data>
+      <filter>missOut == "True"</filter>
+    </data>
     <data name="mendelOut" format="pdf" label="Mendelian inconsistency plot" >
-      <filter>mendelOut == "True"<\filter>
-    <\data>
+      <filter>mendelOut == "True"</filter>
+    </data>
   </outputs>
 
   <help>
