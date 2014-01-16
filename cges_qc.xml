@@ -57,20 +57,15 @@
     <param name="pedfile" type="data" format="txt" label="Pedigree file" help="A text file specifying familial relationships among samples."/>
     <param name="tstvOut" type="data" format="txt" label="Pedigree file" help="A text file specifying familial relationships among samples."/>
   
-    <param name="tstvOut" type="select" display="checkboxes" label="Output TsTv plot">
-      <option value="True"/>
+    <param name="tstvOut" type="boolean" falsevalue="" truevalue="True" label="Output TsTv plot">
     <\param>
-    <param name="hetOut" type="select" display="checkboxes" label="Output F statistic plot">
-      <option value="True"/>
+    <param name="hetOut" type="boolean" falsevalue="" truevalue="True" label="Output F statistic plot">
     <\param>
-    <param name="mafOut" type="select" display="checkboxes" label="Output MAF plot">
-      <option value="True"/>
+    <param name="mafOut" type="boolean" falsevalue="" truevalue="True" label="Output MAF plot">
     <\param>
-    <param name="missOut" type="select" display="checkboxes" label="Output missingness plot">
-      <option value="True"/>
+    <param name="missOut" type="boolean" falsevalue="" truevalue="True" label="Output missingness plot">
     <\param>
-    <param name="mendelOut" type="select" display="checkboxes" label="Output mendel plot">
-      <option value="True"/>
+    <param name="mendelOut" type="boolean" falsevalue="" truevalue="True" label="Output mendel plot">
     <\param>
     
   </inputs>
