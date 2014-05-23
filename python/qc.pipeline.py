@@ -309,6 +309,7 @@ def main():
 
   if options.mendelOut:
     ## generate data
+    print "Generating Mendelian inconsistency plots."
     for branchData in resources.values():
       make_mendel_data(inputPed=branchData['ped'], inputMap=branchData['map'], temp=branchData['temp'])
     ## make plots PDF by executing an R script with passed in arguments
@@ -316,27 +317,32 @@ def main():
 
   if options.tstvOut:
     ## generate data
+    print "Generating Ts/Tv plots."
     for branchData in resources.values():
       make_tstv_data(vcfFile=branchData['vcf'], temp=branchData['temp'])
     ## generate plot PDF
     sp.call(['Rscript', get_base_dir() + '/R/tstv.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.tstvOut], stdout = fnull)
 
   if options.hetOut:
+    print "Generating heterozygosity plots."
     for branchData in resources.values():
       make_het_data(vcfFile=branchData['vcf'], temp=branchData['temp'])
     sp.call(['Rscript', get_base_dir() + '/R/het.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.hetOut], stdout = fnull)
 
   if options.mafOut:
+    print "Generating minor allele frequency plots."
     for branchData in resources.values():
       make_maf_data(plinkMap=branchData['map'], plinkPed=branchData['ped'], temp=branchData['temp'])
     sp.call(['Rscript', get_base_dir() + '/R/maf.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.mafOut])
      
   if options.missOut:
+    print "Generating missingness plots."
     for branchData in resources.values(): 
       make_miss_data(plinkMap=branchData['map'], plinkPed=branchData['ped'], temp=branchData['temp'])
     sp.call(['Rscript', get_base_dir() + '/R/missing.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.missOut])
 
   if options.rediscoverOut:
+    print "Generating rediscovery plots."
     for branchData in resources.values():
       make_rediscovery_data(vcf=branchData['vcf'], evsOut=branchData['temp']+'.evs', kgOut=branchdata['.kg']+'.kg' )
     sp.call(['Rscript', get_base_dir() + '/R/rediscovery.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.rediscoverOut])
