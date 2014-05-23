@@ -4,8 +4,7 @@ import subprocess as sp
 import gzip as gz
 import optparse as opt
 import cPickle
-import vcf
-import os
+import vcf, os, inspect, sys
 
 def smart_open(f):
     '''
@@ -240,6 +239,25 @@ def compile_resource_descr(name, vcf, tmpdir):
                 "temp": tmpdir + name }
   return resources
 
+def get_base_dir():
+  '''
+  Quick 'n dirty
+
+  pulled from: http://stackoverflow.com/questions/18594947/how-can-i-appropriately-include-external-resources-with-cxfreeze
+
+  '''
+  if getattr(sys,"frozen",False):
+      # If this is running in the context of a frozen (executable) file, 
+      # we return the path of the main application executable
+      return os.path.dirname(os.path.abspath(sys.executable))
+  else:
+      # If we are running in script or debug mode, we need 
+      # to inspect the currently executing frame. This enable us to always
+      # derive the directory of main.py no matter from where this function
+      # is being called
+      thisdir = os.path.dirname(inspect.getfile(inspect.currentframe()))
+      return os.path.abspath(os.path.join(thisdir, os.pardir))
+
 def main():
   ## parse command line arguments
   parser = opt.OptionParser()
@@ -290,32 +308,34 @@ def main():
     for branchData in resources.values():
       make_mendel_data(inputPed=branchData['ped'], inputMap=branchData['map'], temp=branchData['temp'])
     ## make plots PDF by executing an R script with passed in arguments
-    sp.call(['Rscript', 'R/mendel.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.mendelOut], stdout = fnull)
+    sp.call(['Rscript', get_base_dir() + '/R/mendel.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.mendelOut], stdout = fnull)
 
   if options.tstvOut:
     ## generate data
     for branchData in resources.values():
       make_tstv_data(vcfFile=branchData['vcf'], temp=branchData['temp'])
     ## generate plot PDF
-    sp.call(['Rscript', 'R/tstv.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.tstvOut], stdout = fnull)
+    sp.call(['Rscript', get_base_dir() + '/R/tstv.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.tstvOut], stdout = fnull)
 
   if options.hetOut:
     for branchData in resources.values():
       make_het_data(vcfFile=branchData['vcf'], temp=branchData['temp'])
-    sp.call(['Rscript', 'R/het.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.hetOut], stdout = fnull)
+    sp.call(['Rscript', get_base_dir() + '/R/het.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.hetOut], stdout = fnull)
 
   if options.mafOut:
     for branchData in resources.values():
       make_maf_data(plinkMap=branchData['map'], plinkPed=branchData['ped'], temp=branchData['temp'])
-    sp.call(['Rscript', 'R/maf.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.mafOut])
+    sp.call(['Rscript', get_base_dir() + '/R/maf.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.mafOut])
      
   if options.missOut:
     for branchData in resources.values(): 
       make_miss_data(plinkMap=branchData['map'], plinkPed=branchData['ped'], temp=branchData['temp'])
-    sp.call(['Rscript', 'R/missing.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.missOut])
+    sp.call(['Rscript', get_base_dir() + '/R/missing.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.missOut])
 
-#  if options.rediscoverOut:
-#    make_rediscovery_data()
+  if options.rediscoverOut:
+    for branchData in resources.values():
+      make_rediscovery_data(vcf=branchData['vcf'], evsOut=branchData['temp']+'.evs', kgOut=branchdata['.kg']+'.kg' )
+    sp.call(['Rscript', get_base_dir() + '/R/rediscovery.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.rediscoverOut])
     
 
 
