@@ -269,6 +269,8 @@ def main():
       help = 'File path for GATK VCF for which to generate QC metrics.')
   parser.add_option('--freebayes-vcf', dest = 'freebayes', action = 'store', 
       help = 'File path for Freebayes VCF for which to generate QC metrics.')
+  parser.add_option('--mpileup-vcf', dest = 'mpileup', action = 'store', 
+      help = 'File path for Mpileup VCF for which to generate QC metrics.')
   parser.add_option('--ped-file', dest = 'pedFile', action = 'store', 
       help = 'Pedigree file for samples (Optional).')
   parser.add_option('--tstv-out', dest = 'tstvOut', action = 'store', 
@@ -291,17 +293,19 @@ def main():
   fnull = open(os.devnull, 'w')
 
   ## give each branch a name
-  branches = ['atlas', 'gatk', 'freebayes', 'cges']
+  branches = ['atlas', 'gatk', 'freebayes', 'mpileup', 'cges']
 
   ## store resource locations for each branch
   resources = dict()
   for branch in branches:
     resources[branch] = compile_resource_descr(name = branch, vcf = opt_dict[branch], tmpdir = options.tempDir)
 
-  ## check if we need to recode into PLINK files
-  if options.mendelOut or options.mafOut or options.missOut or options.hardyOut:
+  ## check if we need to recode into PLINK files (and only if they don't already exist)
+  if options.mendelOut or options.mafOut or options.missOut:
     for branchData in resources.values():
-      make_plink_data(vcfFile=branchData['vcf'], pedFile=options.pedFile, temp=branchData['temp'])
+      if not os.path.isfile(branchData['ped']):
+        print "Generating PLINK files for: %s" % os.path.basename(branchData["vcf"])
+        make_plink_data(vcfFile=branchData['vcf'], pedFile=options.pedFile, temp=branchData['temp'])
 
   if options.mendelOut:
     ## generate data
