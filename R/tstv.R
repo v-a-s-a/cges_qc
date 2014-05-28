@@ -11,16 +11,18 @@ args <- commandArgs(trailing=TRUE)
 atlas.base <- args[1]
 gatk.base <- args[2]
 freebayes.base <- args[3]
-cges.base <- args[4]
-pdf.file <- args[5]
+mpileup.base <- args[4]
+cges.base <- args[5]
+pdf.file <- args[6]
 
 atlas.tstv <- read.table(atlas.base %&% ".TsTv.summary", header=T)
 gatk.tstv <- read.table(gatk.base %&% ".TsTv.summary", header=T)
 freebayes.tstv <- read.table(freebayes.base %&% ".TsTv.summary", header=T)
+mpileup.tstv <- read.table(mpileup.base %&% ".TsTv.summary", header=T)
 consensus.tstv <- read.table(cges.base %&% ".TsTv.summary", header=T)
 
-callers <- list('Atlas', 'GATK', 'Freebayes', 'CGES')
-tstv.dat <- list(atlas.tstv, gatk.tstv, freebayes.tstv, consensus.tstv)
+callers <- list('Atlas', 'GATK', 'Freebayes', 'Mpileup', 'CGES')
+tstv.dat <- list(atlas.tstv, gatk.tstv, freebayes.tstv, mpileup.tstv, consensus.tstv)
 
 
 tstv <- data.frame( tstv = unlist( lapply(tstv.dat, extract_tstv) ),

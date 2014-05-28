@@ -136,7 +136,11 @@ def make_mendel_data(inputPed, inputMap, temp, trioOut=None, locusOut=None):
 def make_tstv_data(vcfFile, temp, tstvOut=None):
   fnull = open(os.devnull, 'w')
   ## identify the total number of variants in the VCF file
-  nsnp = len( [ rec for rec in vcf.Reader(open(vcfFile, 'r')) ] )
+  nsnp = 0
+  vcfConn = open(vcfFile)
+  header = vcfConn.next()
+  while header.startswith('#'): header = vcfConn.next()
+  for line in vcfConn: nsnp += 1
 
   ## get the ts/tv ratio
   tstvCall = ['vcftools', '--vcf', vcfFile, '--TsTv', str(nsnp), '--out',
@@ -258,7 +262,7 @@ def get_base_dir():
       thisdir = os.path.dirname(inspect.getfile(inspect.currentframe()))
       return os.path.abspath(os.path.join(thisdir, os.pardir))
 
-def main():
+def __main__():
   ## parse command line arguments
   parser = opt.OptionParser()
   parser.add_option('--cges-vcf', dest = 'cges', action = 'store', 
@@ -313,7 +317,7 @@ def main():
     for branchData in resources.values():
       make_mendel_data(inputPed=branchData['ped'], inputMap=branchData['map'], temp=branchData['temp'])
     ## make plots PDF by executing an R script with passed in arguments
-    sp.call(['Rscript', get_base_dir() + '/R/mendel.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.mendelOut], stdout = fnull)
+    sp.call(['Rscript', get_base_dir() + '/R/mendel.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['mpileup']['temp'], resources['cges']['temp'], options.mendelOut], stdout = fnull)
 
   if options.tstvOut:
     ## generate data
@@ -321,7 +325,7 @@ def main():
     for branchData in resources.values():
       make_tstv_data(vcfFile=branchData['vcf'], temp=branchData['temp'])
     ## generate plot PDF
-    sp.call(['Rscript', get_base_dir() + '/R/tstv.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.tstvOut], stdout = fnull)
+    sp.call(['Rscript', get_base_dir() + '/R/tstv.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['mpileup']['temp'], resources['cges']['temp'], options.tstvOut], stdout = fnull)
 
   if options.hetOut:
     print "Generating heterozygosity plots."
@@ -333,13 +337,13 @@ def main():
     print "Generating minor allele frequency plots."
     for branchData in resources.values():
       make_maf_data(plinkMap=branchData['map'], plinkPed=branchData['ped'], temp=branchData['temp'])
-    sp.call(['Rscript', get_base_dir() + '/R/maf.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.mafOut])
+    sp.call(['Rscript', get_base_dir() + '/R/maf.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['mpileup']['temp'], resources['cges']['temp'], options.mafOut])
      
   if options.missOut:
     print "Generating missingness plots."
     for branchData in resources.values(): 
       make_miss_data(plinkMap=branchData['map'], plinkPed=branchData['ped'], temp=branchData['temp'])
-    sp.call(['Rscript', get_base_dir() + '/R/missing.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.missOut])
+    sp.call(['Rscript', get_base_dir() + '/R/missing.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['mpileup']['temp'], resources['cges']['temp'], options.missOut])
 
   if options.rediscoverOut:
     print "Generating rediscovery plots."
@@ -351,4 +355,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    __main__()

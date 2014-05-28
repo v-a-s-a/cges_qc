@@ -11,13 +11,15 @@ args <- commandArgs(trailing=TRUE)
 atlas.base <- args[1]
 gatk.base <- args[2]
 freebayes.base <- args[3]
-cges.base <- args[4]
-pdf.file <- args[5]
+mpileup.base <- args[4]
+cges.base <- args[5]
+pdf.file <- args[6]
 
-callers <- list( 'Atlas', 'GATK', 'Freebayes', 'CGES')
+callers <- list( 'Atlas', 'GATK', 'Freebayes', 'Mpileup', 'CGES')
 files <- list(atlas.base %&% '.frq',
               gatk.base %&% '.frq',
               freebayes.base %&% '.frq',
+              mpileup.base %&% '.frq',
               cges.base %&% '.frq')
 
 ## read in tables
