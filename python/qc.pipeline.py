@@ -348,7 +348,7 @@ def __main__():
   if options.rediscoverOut:
     print "Generating rediscovery plots."
     for branchData in resources.values():
-      make_rediscovery_data(vcf=branchData['vcf'], evsOut=branchData['temp']+'.evs', kgOut=branchdata['.kg']+'.kg' )
+      make_rediscovery_data(vcf=branchData['vcf'], evsOut=branchData['temp']+'.evs', kgOut=branchData['temp']+'.kg' )
     sp.call(['Rscript', get_base_dir() + '/R/rediscovery.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.rediscoverOut])
     
 
