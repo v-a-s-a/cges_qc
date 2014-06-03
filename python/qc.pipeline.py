@@ -107,8 +107,6 @@ def make_plink_data(vcfFile, pedFile, temp, pedOut=None, mapOut=None):
     if pedOut and mapOut:
       sp.call(['mv', temp+'.pedigree.ped', pedout])
       sp.call(['mv',  temp+'.map', mapOut])
-    
-
 
 def make_mendel_data(inputPed, inputMap, temp, trioOut=None, locusOut=None):
   '''
@@ -232,10 +230,14 @@ def make_rediscovery_data(vcfFile, evsOut, kgOut):
   del kgVar
   print >> open(kgOut, 'w'), '\t'.join(kgRes)
 
-def make_venn_data():
-  '''
-  Calculate sizes of sets and intersections
-  '''
+
+def makeSet(mapFile):
+  res = set()
+  for line in open(mapFile):
+    line = line.split()
+    id = line[0] + ':' + line[3]
+    res.add(id)
+  return res
 
 
 def compile_resource_descr(name, vcf, tmpdir):
@@ -294,7 +296,7 @@ def __main__():
       help = 'Output file location for rediscovery rate plots PDF.')
   parser.add_option('--mendel-out', dest = 'mendelOut', action = 'store', 
       help = 'Output file location for Mendel inconsistency plots PDF.')
-  parser.add_option('--venn-out', dest = ' vennOut', action = 'store', 
+  parser.add_option('--venn-out', dest = 'vennOut', action = 'store', 
       help = 'Output file location for Venn diagram PDF.')
   parser.add_option('--temp-dir', dest = 'tempDir', action = 'store',
       help = 'Directory for writing intermediate analysis files.')
@@ -312,7 +314,7 @@ def __main__():
     resources[branch] = compile_resource_descr(name = branch, vcf = opt_dict[branch], tmpdir = options.tempDir)
 
   ## check if we need to recode into PLINK files (and only if they don't already exist)
-  if options.mendelOut or options.mafOut or options.missOut:
+  if options.mendelOut or options.mafOut or options.missOut or options.vennOut:
     for branchData in resources.values():
       if not os.path.isfile(branchData['ped']):
         print "Generating PLINK files for: %s" % os.path.basename(branchData["vcf"])
@@ -360,9 +362,7 @@ def __main__():
     
   if options.vennOut:
     print "Generating venn diagram."
-    for branchData in resources.values():
-      make_venn_data()
-    sp.call()
+    sp.call(['Rscript', get_base_dir() + '/R/venn.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['mpileup']['temp'], resources['cges']['temp'], options.vennOut])
 
 
 if __name__ == '__main__':

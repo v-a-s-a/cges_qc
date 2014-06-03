@@ -42,7 +42,7 @@ plt.dat <- stack( dat, select = unlist(sets) )
 plt <- ggplot(plt.dat, aes(x=values, fill = ind)) +
   facet_grid( ind ~ . ,scale= "free") +
   geom_histogram(binwidth=0.003) +
-  xlab('# of Samples') + ylab('Rate of Missing Genotypes')
+  ylab('# of Samples') + xlab('Rate of Missing Genotypes')
 
 
 pdf(pdf.file)

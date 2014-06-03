@@ -8,7 +8,7 @@ library(RColorBrewer)
 ## turn a map file into a vector of variant IDs
 varvec <- function(mapFile) {
   dat <- read.table(mapFile)
-  return(dat$V1 %&% dat$V3)
+  return(dat$V1 %&% ':' %&% dat$V4)
 }
 
 args <- commandArgs(trailing=TRUE)
@@ -25,11 +25,11 @@ pdf.file <- args[6]
 sets <- list('Atlas', 'GATK', 'Freebayes', 'Mpileup', 'CGES')
 bases <- list(atlas.base, gatk.base, freebayes.base, mpileup.base, cges.base)
 mapFiles <- lapply(bases, function(x) x %&% '.map')
-variants <- lapply(mapFiles, varvec)
-names(var) <- sets
+var <- lapply(mapFiles, varvec)
 
-pdf(pdf.file)
-draw.quad.venn(area1 = length(var[[1]]),
+print(lapply(var, head))
+
+venn.plt <- draw.quad.venn(area1 = length(var[[1]]),
                area2 = length(var[[2]]),
                area3 = length(var[[3]]),
                area4 = length(var[[4]]),
@@ -43,10 +43,12 @@ draw.quad.venn(area1 = length(var[[1]]),
                n124 = length(Reduce(intersect, var[c(1,2,4)])),
                n134 = length(Reduce(intersect, var[c(1,3,4)])),
                n234 = length(Reduce(intersect, var[c(2,3,4)])),
-               n1234 = length(Reduce(intersect, var)),
+               n1234 = length(var[[5]]),
                category = c('ATLAS', 'GATK', 'Freebayes', 'Mpileup'),
                fill = c( "#F8766D", "#C77CFF", "#00BFC4", "#FF0000"),
                scaled = TRUE)
+pdf(pdf.file)
+grid.draw(venn.plt)
 dev.off()
 
 
