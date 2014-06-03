@@ -232,6 +232,11 @@ def make_rediscovery_data(vcfFile, evsOut, kgOut):
   del kgVar
   print >> open(kgOut, 'w'), '\t'.join(kgRes)
 
+def make_venn_data():
+  '''
+  Calculate sizes of sets and intersections
+  '''
+
 
 def compile_resource_descr(name, vcf, tmpdir):
   '''
@@ -351,7 +356,7 @@ def __main__():
     print "Generating rediscovery plots."
     for branchData in resources.values():
       make_rediscovery_data(vcfFile=branchData['vcf'], evsOut=branchData['temp']+'.evs', kgOut=branchData['temp']+'.kg' )
-    sp.call(['Rscript', get_base_dir() + '/R/rediscovery.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.rediscoverOut])
+    sp.call(['Rscript', get_base_dir() + '/R/rediscovery.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['mpileup']['temp'], resources['cges']['temp'], options.rediscoverOut])
     
   if options.vennOut:
     print "Generating venn diagram."
