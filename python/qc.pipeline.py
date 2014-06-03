@@ -289,6 +289,8 @@ def __main__():
       help = 'Output file location for rediscovery rate plots PDF.')
   parser.add_option('--mendel-out', dest = 'mendelOut', action = 'store', 
       help = 'Output file location for Mendel inconsistency plots PDF.')
+  parser.add_option('--venn-out', dest = ' vennOut', action = 'store', 
+      help = 'Output file location for Venn diagram PDF.')
   parser.add_option('--temp-dir', dest = 'tempDir', action = 'store',
       help = 'Directory for writing intermediate analysis files.')
   (options, args) = parser.parse_args()
@@ -348,10 +350,14 @@ def __main__():
   if options.rediscoverOut:
     print "Generating rediscovery plots."
     for branchData in resources.values():
-      make_rediscovery_data(vcf=branchData['vcf'], evsOut=branchData['temp']+'.evs', kgOut=branchData['temp']+'.kg' )
+      make_rediscovery_data(vcfFile=branchData['vcf'], evsOut=branchData['temp']+'.evs', kgOut=branchData['temp']+'.kg' )
     sp.call(['Rscript', get_base_dir() + '/R/rediscovery.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.rediscoverOut])
     
-
+  if options.vennOut:
+    print "Generating venn diagram."
+    for branchData in resources.values():
+      make_venn_data()
+    sp.call()
 
 
 if __name__ == '__main__':
