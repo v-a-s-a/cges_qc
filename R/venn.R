@@ -27,8 +27,6 @@ bases <- list(atlas.base, gatk.base, freebayes.base, mpileup.base, cges.base)
 mapFiles <- lapply(bases, function(x) x %&% '.map')
 var <- lapply(mapFiles, varvec)
 
-print(lapply(var, head))
-
 venn.plt <- draw.quad.venn(area1 = length(var[[1]]),
                area2 = length(var[[2]]),
                area3 = length(var[[3]]),
