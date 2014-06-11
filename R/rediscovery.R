@@ -14,6 +14,11 @@ make_evs_fpath <- function(base) {
   return(fpath)
 }
 
+make_giab_fpath <- function(base) {
+  fpath <- paste( base, '.giab', sep = '' )
+  return(fpath)
+}
+
 args <- commandArgs(trailing=TRUE)
 
 atlas.base <- args[1]
@@ -25,7 +30,7 @@ pdf.file <- args[6]
 
 
 set.names <- list('Atlas', 'GATK', 'Freebayes', 'Mpileup', 'CGES')
-call.sets = list( atlas.base
+call.sets = list( atlas.base,
                   gatk.base,
                   freebayes.base,
                   mpileup.base,
@@ -37,28 +42,34 @@ evs.dat <- lapply( evs.fpaths, read.table )
 evs <- data.frame( evs = unlist( lapply(evs.dat, subset, select=V2) ),
                   Callers = unlist(set.names))
 evs$order_sets <- reorder(evs$Callers, evs$evs)
-
-
 evs.plt <- ggplot( evs, aes(x=order_sets, y=evs, fill=Callers) ) +
         geom_bar(stat="identity", show_guide = FALSE) +
         labs(x="Caller", y="% of Variants Found in Exome Variant Server") +
-        theme_bw() +
-        colScale
+        theme_bw() 
+
 kg.fpaths <-  mapply(make_kg_fpath, call.sets)
 kg.dat <- lapply( kg.fpaths, read.table )
-
 kg <- data.frame( kg = unlist( lapply(kg.dat, subset, select=V2) ),
                    Callers = unlist(set.names) )
 kg$order_sets <- reorder(kg$Callers, kg$kg)
-
-
 kg.plt <- ggplot( kg, aes(x=order_sets, y=kg, fill=Callers) ) +
         geom_bar(stat="identity", show_guide = FALSE) +
         labs(x="Caller", y="% of Variants Found in 1000 Genomes") +
+        theme_bw()
+
+giab.fpaths <-  mapply(make_giab_fpath, call.sets)
+giab.dat <- lapply( giab.fpaths, read.table )
+giab <- data.frame( giab = unlist( lapply(giab.dat, subset, select=V2) ),
+                   Callers = unlist(set.names) )
+giab$order_sets <- reorder(giab$Callers, giab$giab)
+giab.plt <- ggplot( giab, aes(x=order_sets, y=giab, fill=Callers) ) +
+        geom_bar(stat="identity", show_guide = FALSE) +
+        labs(x="Caller", y="% of Variants Found in GiaB Release") +
         theme_bw()
 
 
 pdf(pdf.file)
 show(kg.plt)
 show(evs.plt)
+show(giab.plt)
 dev.off()
