@@ -216,20 +216,30 @@ def make_hardy_data(plinkMap, plinkPed, temp, hardyOut=None):
     sp.call(['mv', temp+'.hwe', hardyOut])
     
 
-def make_rediscovery_data(vcfFile, evsOut, kgOut):
+def make_evs_data(vcfFile, evsOut = ''):
   fnull = open(os.devnull, 'w')
-  ## calculate EVS rediscovery rate
-  evsVar = cPickle.load(open('/nas40t0/vasya/exome_variant_server/ESP6500SI-V2-SSA137.snps.set.pickle', 'rb'))
-  evsRes = calc_rediscovery(evsVar, vcfFile)
-  del evsVar
-  print >> open(evsOut, 'w'), '\t'.join(evsRes)
+  if evsOut != '':
+    ## calculate EVS rediscovery rate
+    evsVar = cPickle.load(open('/nas40t0/vasya/exome_variant_server/ESP6500SI-V2-SSA137.snps.set.pickle', 'rb'))
+    evsRes = calc_rediscovery(evsVar, vcfFile)
+    del evsVar
+    print >> open(evsOut, 'w'), '\t'.join(evsRes)
 
-  ## calculate 1kG rediscovery rate
-  kgVar = cPickle.load(open('/nas40t0/vasya/1kG/ALL_1000G_phase1integrated_v3_impute_var.pickle'))
-  kgRes = calc_rediscovery(kgVar, vcfFile) 
-  del kgVar
-  print >> open(kgOut, 'w'), '\t'.join(kgRes)
+def make_kg_data(vcfFile, kgOut=''):
+  if kgOut != '':
+    ## calculate 1kG rediscovery rate
+    kgVar = cPickle.load(open('/nas40t0/vasya/1kG/ALL_1000G_phase1integrated_v3_impute_var.pickle'))
+    kgRes = calc_rediscovery(kgVar, vcfFile) 
+    del kgVar
+    print >> open(kgOut, 'w'), '\t'.join(kgRes)
 
+def make_giab_data(vcfFile, giabOut=''):
+  if giabOut != '':
+    ## calculate GiaB rediscovery rate
+    giabVar = cPickle.load(open('/nas40t0/vasya/genome_in_a_bottle/NIST_RTG_PlatGen_merged_highconfidence_v0.2.primitives.GT.cpickle'))
+    giabRes = calc_rediscovery(giabVar, vcfFile)
+    del giabVar
+    print >> open(giabOut, 'w'), '\t'.join(giabRes)
 
 def makeSet(mapFile):
   res = set()
@@ -357,7 +367,10 @@ def __main__():
   if options.rediscoverOut:
     print "Generating rediscovery plots."
     for branchData in resources.values():
-      make_rediscovery_data(vcfFile=branchData['vcf'], evsOut=branchData['temp']+'.evs', kgOut=branchData['temp']+'.kg' )
+      ## do not remake files if they already exist 
+      if not os.path.isfile(branchData['temp']+'.evs'): make_evs_data(vcfFile=branchData['vcf'], evsOut=branchData['temp']+'.evs')
+      if not os.path.isfile(branchData['temp']+'.kg'): make_kg_data(vcfFile=branchData['vcf'], kgOut=branchData['temp']+'.kg')
+      if not os.path.isfile(branchData['temp']+'.giab'): make_giab_data(vcfFile=branchData['vcf'], kgOut=branchData['temp']+'.giab')
     sp.call(['Rscript', get_base_dir() + '/R/rediscovery.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['mpileup']['temp'], resources['cges']['temp'], options.rediscoverOut])
     
   if options.vennOut:
