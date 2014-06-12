@@ -36,6 +36,7 @@ call.sets = list( atlas.base,
                   mpileup.base,
                   cges.base)
 
+fontSize <-9 
 
 evs.fpaths <-  mapply(make_evs_fpath, call.sets)
 evs.dat <- lapply( evs.fpaths, read.table )
@@ -45,7 +46,7 @@ evs$order_sets <- reorder(evs$Callers, evs$evs)
 evs.plt <- ggplot( evs, aes(x=order_sets, y=evs, fill=Callers) ) +
         geom_bar(stat="identity", show_guide = FALSE) +
         labs(x="Caller", y="% of Variants Found in Exome Variant Server") +
-        theme_bw() 
+        theme_bw(base_size = fontSize)
 
 kg.fpaths <-  mapply(make_kg_fpath, call.sets)
 kg.dat <- lapply( kg.fpaths, read.table )
@@ -55,7 +56,7 @@ kg$order_sets <- reorder(kg$Callers, kg$kg)
 kg.plt <- ggplot( kg, aes(x=order_sets, y=kg, fill=Callers) ) +
         geom_bar(stat="identity", show_guide = FALSE) +
         labs(x="Caller", y="% of Variants Found in 1000 Genomes") +
-        theme_bw()
+        theme_bw(base_size = fontSize)
 
 giab.fpaths <-  mapply(make_giab_fpath, call.sets)
 giab.dat <- lapply( giab.fpaths, read.table )
@@ -65,11 +66,9 @@ giab$order_sets <- reorder(giab$Callers, giab$giab)
 giab.plt <- ggplot( giab, aes(x=order_sets, y=giab, fill=Callers) ) +
         geom_bar(stat="identity", show_guide = FALSE) +
         labs(x="Caller", y="% of Variants Found in GiaB Release") +
-        theme_bw()
+        theme_bw(base_size = fontSize)
 
 
 pdf(pdf.file)
-show(kg.plt)
-show(evs.plt)
-show(giab.plt)
+grid.arrange(kg.plt, evs.plt, giab.plt, nrow = 3)
 dev.off()
