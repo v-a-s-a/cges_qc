@@ -1,8 +1,13 @@
 library(ggplot2)
 library(gridExtra)
+library(plyr)
 
 calc_mendel <- function(x) {
   return( with(x, length(which(N>0))/length(N)) )
+}
+
+parse_imen <- function(x) {
+  read.table(x, header=T)
 }
 
 "%&%" <- function(a,b) paste(a, b, sep="")
@@ -23,6 +28,7 @@ gatk.fmen <- read.table(gatk.base %&% ".fmendel", header=T)
 freebayes.fmen <- read.table(freebayes.base %&% ".fmendel", header=T)
 mpileup.fmen <- read.table(mpileup.base %&% ".fmendel", header=T)
 consensus.fmen <- read.table(cges.base %&% ".fmendel", header=T)
+
 
 ## look at mendelian inconsistencies per locus
 atlas.lmen <- read.table(atlas.base %&% ".lmendel", header=T)
@@ -81,6 +87,18 @@ mendel <- data.frame( trio_error_rate = (unlist(lapply(fmendel.dat, sum)) / unli
 mendel$locus_order_callers <- reorder(mendel$Callers, mendel$locus_error_rate)
 mendel$trio_order_callers <- reorder(mendel$Callers, mendel$trio_error_rate)
 
+## tMer data manipulation
+dat <- list(atlas.fmen, gatk.fmen, freebayes.fmen, mpileup.fmen, consensus.fmen)
+## uniquify errors column names
+dat <- Map( function(dataf, newname) rename(dataf, c("N"=newname)), dat, callers )
+## Merge them into a single data frame properly ordered by sample
+dat <- Reduce( function(...) merge(..., by.x=c('FID','PAT', 'MAT', 'CHLD'), by.y=c('FID', 'PAT', 'MAT', 'CHLD'), suffixes), dat )
+plt.dat <- stack( dat, select = unlist(callers) )
+plt.dat$ind <- factor(plt.dat$ind, levels = callers)
+tmer_plt <- ggplot(plt.dat, aes(x=values, fill=ind)) + facet_grid( ind ~ . ,scale= "free") +
+        geom_histogram(binwidth=100) +
+        xlab('# of Mendelian errors') + ylab('# of trios') +
+        theme_bw()
 
 ## plot dat graph
 locus_plt <- ggplot( mendel, aes(x=locus_order_callers, y=locus_error_rate, fill=Callers) ) + 
@@ -102,4 +120,5 @@ print(mendel)
 pdf(pdf.file)
 show(locus_plt)
 show(trio_plt)
+show(tmer_plt)
 dev.off()
