@@ -95,6 +95,10 @@ trio_plt <- ggplot( mendel, aes(x=locus_order_callers, y=trio_error_rate, fill=C
           xlab("Caller") +
           ylab("% of Proband Genotypes with Mendelian errors") 
 
+print("Mendel")
+print(mendel)
+
+
 pdf(pdf.file)
 show(locus_plt)
 show(trio_plt)

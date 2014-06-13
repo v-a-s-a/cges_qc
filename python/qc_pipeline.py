@@ -336,7 +336,7 @@ def __main__():
     for branchData in resources.values():
       make_mendel_data(inputPed=branchData['ped'], inputMap=branchData['map'], temp=branchData['temp'])
     ## make plots PDF by executing an R script with passed in arguments
-    sp.call(['Rscript', get_base_dir() + '/R/mendel.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['mpileup']['temp'], resources['cges']['temp'], options.mendelOut], stdout = fnull)
+    sp.call(['Rscript', get_base_dir() + '/R/mendel.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['mpileup']['temp'], resources['cges']['temp'], options.mendelOut])
 
   if options.tstvOut:
     ## generate data
@@ -344,7 +344,7 @@ def __main__():
     for branchData in resources.values():
       make_tstv_data(vcfFile=branchData['vcf'], temp=branchData['temp'])
     ## generate plot PDF
-    sp.call(['Rscript', get_base_dir() + '/R/tstv.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['mpileup']['temp'], resources['cges']['temp'], options.tstvOut], stdout = fnull)
+    sp.call(['Rscript', get_base_dir() + '/R/tstv.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['mpileup']['temp'], resources['cges']['temp'], options.tstvOut])
 
   if options.hetOut:
     print "Generating heterozygosity plots."

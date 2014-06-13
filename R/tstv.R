@@ -29,6 +29,8 @@ tstv <- data.frame( tstv = unlist( lapply(tstv.dat, extract_tstv) ),
                     Callers = unlist(callers))
 tstv$order_callers <- reorder(tstv$Callers, tstv$tstv)
 
+print(tstv)
+
 plt <- ggplot( tstv, aes(x=order_callers, y=tstv, fill=Callers) ) +
         geom_bar(stat="identity", show_guide = FALSE) +
         labs(x="Callers", y="Ts/Tv") +

@@ -68,6 +68,12 @@ giab.plt <- ggplot( giab, aes(x=order_sets, y=giab, fill=Callers) ) +
         labs(x="Caller", y="% of Variants Found in GiaB Release") +
         theme_bw(base_size = fontSize)
 
+print("GiaB")
+print(giab)
+print("EVS")
+print(evs)
+print("1000G")
+print(kg)
 
 pdf(pdf.file)
 grid.arrange(kg.plt, evs.plt, giab.plt, nrow = 3)
