@@ -116,6 +116,9 @@ trio_plt <- ggplot( mendel, aes(x=locus_order_callers, y=trio_error_rate, fill=C
 print("Mendel")
 print(mendel)
 
+raw_ranges <- lapply(dat[c('Atlas', 'GATK', 'Freebayes', 'Mpileup', 'CGES')], range)
+ranges <- lapply(raw_ranges, function(x) 100*(x/(139897)))
+print(ranges)
 
 pdf(pdf.file)
 show(locus_plt)

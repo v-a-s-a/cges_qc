@@ -1,4 +1,5 @@
 library(ggplot2)
+library(grid)
 
 "%&%" <- function(a,b) paste(a, b, sep="")
 
@@ -42,8 +43,18 @@ plt2 <- ggplot(plt.dat, aes(values, colour=ind)) + stat_ecdf() +
       labs(x='MAF', y='Proportion of Variants with MAF <= x') +
       theme_bw()
 
+plt2_zoom <- ggplot(plt.dat, aes(values, colour=ind)) + stat_ecdf(geom="step") +
+      scale_x_continuous(limits=c(0.0, 0.1)) +
+      labs(x='MAF', y='Proportion of Variants with MAF <= x') +
+      theme_bw() + theme(legend.position="none")
+
+#A viewport taking up a fraction of the plot area
+vp <- viewport(width = 0.4, height = 0.4, x = 0.5, y = 0.3)
+
 pdf(pdf.file)
 show(plt)
 show(plt2)
+print(plt2)
+print(plt2_zoom, vp = vp)
 dev.off()
 

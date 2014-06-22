@@ -152,11 +152,10 @@ def make_tstv_data(vcfFile, temp, tstvOut=None):
   if tstvOut:
     sp.call(['mv', temp+'.TsTv.summary', tstvOut])
 
-def make_het_data(vcfFile, temp, hetOut=None):
+def make_het_data(pedFile, mapFile, temp, hetOut=None):
   fnull = open(os.devnull, 'w')
   ## Calculate sample heterozygosity
-  hetCall = ['vcftools', '--vcf', vcfFile, '--het', '--out', temp ]
-  hetCall = smart_vcftools(hetCall)
+  hetCall = ['plink', '--ped', pedFile, '--map', mapFile, '--het', '--out', temp ]
   sp.call(hetCall, stdout = fnull)
 
   ## clean up files
@@ -220,7 +219,7 @@ def make_evs_data(vcfFile, evsOut = ''):
   fnull = open(os.devnull, 'w')
   if evsOut != '':
     ## calculate EVS rediscovery rate
-    evsVar = cPickle.load(open('/nas40t0/vasya/exome_variant_server/ESP6500SI-V2-SSA137.snps.set.pickle', 'rb'))
+    evsVar = cPickle.load(open('/nas40t0/vasya/exome_variant_server/ESP6500SI-V2-SSA137.indels.set.pickle', 'rb'))
     evsRes = calc_rediscovery(evsVar, vcfFile)
     del evsVar
     print >> open(evsOut, 'w'), '\t'.join(evsRes)
@@ -324,7 +323,7 @@ def __main__():
     resources[branch] = compile_resource_descr(name = branch, vcf = opt_dict[branch], tmpdir = options.tempDir)
 
   ## check if we need to recode into PLINK files (and only if they don't already exist)
-  if options.mendelOut or options.mafOut or options.missOut or options.vennOut:
+  if options.mendelOut or options.mafOut or options.missOut:
     for branchData in resources.values():
       if not os.path.isfile(branchData['ped']):
         print "Generating PLINK files for: %s" % os.path.basename(branchData["vcf"])
@@ -349,8 +348,8 @@ def __main__():
   if options.hetOut:
     print "Generating heterozygosity plots."
     for branchData in resources.values():
-      make_het_data(vcfFile=branchData['vcf'], temp=branchData['temp'])
-    sp.call(['Rscript', get_base_dir() + '/R/het.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['cges']['temp'], options.hetOut], stdout = fnull)
+      make_het_data(pedFile=branchData['ped'],mapFile=branchData['map'], temp=branchData['temp'])
+    sp.call(['Rscript', get_base_dir() + '/R/het.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['mpileup']['temp'], resources['cges']['temp'], options.hetOut], stdout = fnull)
 
   if options.mafOut:
     print "Generating minor allele frequency plots."
@@ -369,8 +368,8 @@ def __main__():
     for branchData in resources.values():
       ## do not remake files if they already exist 
       if not os.path.isfile(branchData['temp']+'.evs'): make_evs_data(vcfFile=branchData['vcf'], evsOut=branchData['temp']+'.evs')
-      if not os.path.isfile(branchData['temp']+'.kg'): make_kg_data(vcfFile=branchData['vcf'], kgOut=branchData['temp']+'.kg')
-      if not os.path.isfile(branchData['temp']+'.giab'): make_giab_data(vcfFile=branchData['vcf'], kgOut=branchData['temp']+'.giab')
+      #if not os.path.isfile(branchData['temp']+'.kg'): make_kg_data(vcfFile=branchData['vcf'], kgOut=branchData['temp']+'.kg')
+      if not os.path.isfile(branchData['temp']+'.giab'): make_giab_data(vcfFile=branchData['vcf'], giabOut=branchData['temp']+'.giab')
     sp.call(['Rscript', get_base_dir() + '/R/rediscovery.R', resources['atlas']['temp'], resources['gatk']['temp'], resources['freebayes']['temp'], resources['mpileup']['temp'], resources['cges']['temp'], options.rediscoverOut])
     
   if options.vennOut:

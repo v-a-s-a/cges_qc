@@ -36,7 +36,7 @@ call.sets = list( atlas.base,
                   mpileup.base,
                   cges.base)
 
-fontSize <-9 
+fontSize <-7 
 
 evs.fpaths <-  mapply(make_evs_fpath, call.sets)
 evs.dat <- lapply( evs.fpaths, read.table )
